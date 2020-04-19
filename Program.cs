@@ -39,10 +39,8 @@ namespace ThreadsHeadlines
             {
                 string title = curr.InnerText;
                 string link = curr.GetAttributeValue("href", "none") != "none" ? 
-                              curr.GetAttributeValue("href", "none") : 
-                              curr.ChildNodes["a"].GetAttributeValue("href", "none");
+                              curr.GetAttributeValue("href", "none") : curr.ChildNodes["a"].GetAttributeValue("href", "none");
                 string fullLink = link.StartsWith("/") ? baseUrl + link : link;
-
                 result[title] = fullLink;
             }
 
