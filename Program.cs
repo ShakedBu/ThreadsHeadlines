@@ -11,7 +11,7 @@ namespace ThreadsHeadlines
         static void Main(string[] args)
         {
             // Final dictionary to check out the results
-            Dictionary<string, Dictionary<string, string>> allArticles = new Dictionary<string, Dictionary<string, string>>();
+            var allArticles = new Dictionary<string, Dictionary<string, string>>();
 
             // Get the continents pages' urls
             var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
@@ -51,7 +51,7 @@ namespace ThreadsHeadlines
 
                 foreach (var currArticle in currPage.Articles)
                 {
-                    Console.WriteLine(currArticle.Key + ": " + currArticle.Value);
+                    Console.WriteLine("{0}: {1}", currArticle.Key, currArticle.Value);
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace ThreadsHeadlines
         public static Dictionary<string, string> GetArticlesFromPage(string url, string tag, string className)
         {
             var result = new Dictionary<string, string>();
-            HtmlDocument HtmlDoc = new HtmlDocument();
+            var HtmlDoc = new HtmlDocument();
 
             // Base url
             var uri = new Uri(url);
