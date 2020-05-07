@@ -77,7 +77,7 @@ namespace ThreadsHeadlines
 
         public void ThreadPoolCallback(Object threadContext)
         {
-            // Gets the articles from the givven page
+            // Gets the articles from the given page
             Articles = GetArticlesFromPage(Url, Tag, ClassName);
 
             // Signal that all done :)
