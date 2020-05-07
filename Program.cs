@@ -10,14 +10,21 @@ namespace ThreadsHeadlines
     {
         static void Main(string[] args)
         {
+            // Final ditionary to check out the results
+            Dictionary<string, Dictionary<string, string>> allArticles = new Dictionary<string, Dictionary<string, string>>();
+
             // Get the continents pages' urls
             var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
 
             var doneEvents = new ManualResetEvent[articles.Count];
             var pagesArray = new WebPage[articles.Count];
+
+            // Maximoum 10 threads at a time
             ThreadPool.SetMaxThreads(10, 10);
 
             int i = 0;
+
+            // Build requests queue
             foreach (var curr in articles.Keys)
             {
                 doneEvents[i] = new ManualResetEvent(false);
@@ -26,12 +33,19 @@ namespace ThreadsHeadlines
                 ThreadPool.QueueUserWorkItem(page.ThreadPoolCallback, i);
                 i++;
             }
-
+            
+            // Wait for all of the IO to be finished
             WaitHandle.WaitAll(doneEvents);
 
+            // Print the results and add them to a structure
             for (int j = 0; j < articles.Count; j++)
             {
                 WebPage currPage = pagesArray[j];
+
+                // Set the structure
+                allArticles[currPage.Category] = currPage.Articles;
+
+                // Print the results
                 Console.WriteLine("-------------------------------------------------------");
                 Console.WriteLine(currPage.Category);
 
@@ -65,7 +79,10 @@ namespace ThreadsHeadlines
 
         public void ThreadPoolCallback(Object threadContext)
         {
+            // Gets the articles from the givven page
             Articles = GetArticlesFromPage(Url, Tag, ClassName);
+
+            // Signal that all done :)
             _doneEvent.Set();
         }
 
