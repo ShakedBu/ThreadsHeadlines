@@ -10,7 +10,7 @@ namespace ThreadsHeadlines
     {
         static void Main(string[] args)
         {
-            // Final ditionary to check out the results
+            // Final dictionary to check out the results
             Dictionary<string, Dictionary<string, string>> allArticles = new Dictionary<string, Dictionary<string, string>>();
 
             // Get the continents pages' urls
@@ -19,7 +19,7 @@ namespace ThreadsHeadlines
             var doneEvents = new ManualResetEvent[articles.Count];
             var pagesArray = new WebPage[articles.Count];
 
-            // Maximoum 10 threads at a time
+            // Maximum 10 threads at a time
             ThreadPool.SetMaxThreads(10, 10);
 
             int i = 0;
@@ -107,8 +107,12 @@ namespace ThreadsHeadlines
             foreach (HtmlNode curr in elements)
             {
                 string title = curr.InnerText;
-                string link = curr.GetAttributeValue("href", "none") != "none" ?
-                              curr.GetAttributeValue("href", "none") : curr.ChildNodes["a"].GetAttributeValue("href", "none");
+                string link = curr.GetAttributeValue("href", "none");
+
+                // Check if the link is found - if not get down to child element for it
+                link = link != "none" ? link : curr.ChildNodes["a"].GetAttributeValue("href", "none");
+
+                // Check if the link is relative
                 string fullLink = link.StartsWith("/") ? baseUrl + link : link;
                 result[title] = fullLink;
             }
