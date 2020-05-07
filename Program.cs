@@ -24,7 +24,7 @@ namespace ThreadsHeadlines
 
             int i = 0;
 
-            // Build requests queue
+            // Build requests queue and execute the calls
             foreach (var curr in articles.Keys)
             {
                 doneEvents[i] = new ManualResetEvent(false);
