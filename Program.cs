@@ -10,33 +10,36 @@ namespace ThreadsHeadlines
     {
         static void Main(string[] args)
         {
+            // Get the continents pages' urls
             var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
-            
-            //Dictionary<string, Dictionary<string, string>> allArticles = GetArticlesFromPageByQ(articles);
 
-            foreach (var curr in articles)
+            var doneEvents = new ManualResetEvent[articles.Count];
+            var pagesArray = new WebPage[articles.Count];
+            ThreadPool.SetMaxThreads(10, 10);
+
+            int i = 0;
+            foreach (var curr in articles.Keys)
             {
-                Console.WriteLine(curr.Key + ": " + curr.Value);
-            }
-        }
-
-        static Dictionary<string, Dictionary<string, string>> GetArticlesFromPageByQ(Dictionary<string, string> urls) 
-        {
-            Dictionary<string, Dictionary<string, string>> result = new Dictionary<string, Dictionary<string, string>>();
-            ThreadPool.SetMaxThreads(10, urls.Count);
-
-            foreach (var curr in urls.Keys) {
-                //var currPage = new WebPage()
-                //{
-                //    url = urls[curr],
-                //    tag = "li",
-                //    className = "nw-c-nav__secondary-menuitem-container"
-                //};
-                result[curr] = WebPage.GetArticlesFromPage(urls[curr], "li", "nw-c-nav__secondary-menuitem-container");
-                //ThreadPool.QueueUserWorkItem(new WaitCallback(GetArticlesFromPage), currPage);
+                doneEvents[i] = new ManualResetEvent(false);
+                var page = new WebPage(curr, articles[curr], "a", "gs-c-promo-heading", doneEvents[i]);
+                pagesArray[i] = page;
+                ThreadPool.QueueUserWorkItem(page.ThreadPoolCallback, i);
+                i++;
             }
 
-            return result;
+            WaitHandle.WaitAll(doneEvents);
+
+            for (int j = 0; j < articles.Count; j++)
+            {
+                WebPage currPage = pagesArray[j];
+                Console.WriteLine("-------------------------------------------------------");
+                Console.WriteLine(currPage.Category);
+
+                foreach (var currArticle in currPage.Articles)
+                {
+                    Console.WriteLine(currArticle.Key + ": " + currArticle.Value);
+                }
+            }
         }
     }
 
@@ -44,14 +47,16 @@ namespace ThreadsHeadlines
     {
         private ManualResetEvent _doneEvent;
 
+        public string Category { get; }
         public string Url { get; }
         public string Tag { get; }
         public string ClassName { get; }
 
         public Dictionary<string, string> Articles { get; private set; }
 
-        public WebPage(string url, string tag, string className, ManualResetEvent doneEvent)
+        public WebPage(string category, string url, string tag, string className, ManualResetEvent doneEvent)
         {
+            Category = category;
             Url = url;
             Tag = tag;
             ClassName = className;
