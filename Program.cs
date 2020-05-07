@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 
@@ -15,6 +16,7 @@ namespace ThreadsHeadlines
 
             // Get the continents pages' urls
             var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
+            string[] keysArray = articles.Keys.ToArray<string>();
 
             var doneEvents = new ManualResetEvent[articles.Count];
             var pagesArray = new WebPage[articles.Count];
@@ -22,25 +24,23 @@ namespace ThreadsHeadlines
             // Maximum 10 threads at a time
             ThreadPool.SetMaxThreads(10, 10);
 
-            int i = 0;
-
             // Build requests queue and execute the calls
-            foreach (var curr in articles.Keys)
+            for (int i = 0; i < keysArray.Length; i++)
             {
+                var curr = keysArray[i];
                 doneEvents[i] = new ManualResetEvent(false);
                 var page = new WebPage(curr, articles[curr], "a", "gs-c-promo-heading", doneEvents[i]);
                 pagesArray[i] = page;
                 ThreadPool.QueueUserWorkItem(page.ThreadPoolCallback, i);
-                i++;
             }
             
             // Wait for all of the IO to be finished
             WaitHandle.WaitAll(doneEvents);
 
             // Print the results and add them to a structure
-            for (int j = 0; j < articles.Count; j++)
+            for (int i = 0; i < articles.Count; i++)
             {
-                WebPage currPage = pagesArray[j];
+                WebPage currPage = pagesArray[i];
 
                 // Set the structure
                 allArticles[currPage.Category] = currPage.Articles;
