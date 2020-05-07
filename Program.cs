@@ -110,7 +110,10 @@ namespace ThreadsHeadlines
                 string link = curr.GetAttributeValue("href", "none");
 
                 // Check if the link is found - if not get child element for it
-                link = link != "none" ? link : curr.ChildNodes["a"].GetAttributeValue("href", "none");
+                if (link == "none")
+                {
+                    link = curr.ChildNodes["a"].GetAttributeValue("href", "none"); 
+                }
 
                 // Check if the link is relative
                 string fullLink = link.StartsWith("/") ? baseUrl + link : link;
