@@ -109,7 +109,7 @@ namespace ThreadsHeadlines
                 string title = curr.InnerText;
                 string link = curr.GetAttributeValue("href", "none");
 
-                // Check if the link is found - if not get down to child element for it
+                // Check if the link is found - if not get child element for it
                 link = link != "none" ? link : curr.ChildNodes["a"].GetAttributeValue("href", "none");
 
                 // Check if the link is relative
