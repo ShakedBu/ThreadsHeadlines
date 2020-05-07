@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 
 namespace ThreadsHeadlines
 {
@@ -9,7 +10,9 @@ namespace ThreadsHeadlines
     {
         static void Main(string[] args)
         {
-            var articles = GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
+            var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
+            
+            //Dictionary<string, Dictionary<string, string>> allArticles = GetArticlesFromPageByQ(articles);
 
             foreach (var curr in articles)
             {
@@ -17,7 +20,51 @@ namespace ThreadsHeadlines
             }
         }
 
-        static Dictionary<string, string> GetArticlesFromPage(string url, string tag, string className)
+        static Dictionary<string, Dictionary<string, string>> GetArticlesFromPageByQ(Dictionary<string, string> urls) 
+        {
+            Dictionary<string, Dictionary<string, string>> result = new Dictionary<string, Dictionary<string, string>>();
+            ThreadPool.SetMaxThreads(10, urls.Count);
+
+            foreach (var curr in urls.Keys) {
+                //var currPage = new WebPage()
+                //{
+                //    url = urls[curr],
+                //    tag = "li",
+                //    className = "nw-c-nav__secondary-menuitem-container"
+                //};
+                result[curr] = WebPage.GetArticlesFromPage(urls[curr], "li", "nw-c-nav__secondary-menuitem-container");
+                //ThreadPool.QueueUserWorkItem(new WaitCallback(GetArticlesFromPage), currPage);
+            }
+
+            return result;
+        }
+    }
+
+    class WebPage
+    {
+        private ManualResetEvent _doneEvent;
+
+        public string Url { get; }
+        public string Tag { get; }
+        public string ClassName { get; }
+
+        public Dictionary<string, string> Articles { get; private set; }
+
+        public WebPage(string url, string tag, string className, ManualResetEvent doneEvent)
+        {
+            Url = url;
+            Tag = tag;
+            ClassName = className;
+            _doneEvent = doneEvent;
+        }
+
+        public void ThreadPoolCallback(Object threadContext)
+        {
+            Articles = GetArticlesFromPage(Url, Tag, ClassName);
+            _doneEvent.Set();
+        }
+
+        public static Dictionary<string, string> GetArticlesFromPage(string url, string tag, string className)
         {
             var result = new Dictionary<string, string>();
             HtmlDocument HtmlDoc = new HtmlDocument();
@@ -38,7 +85,7 @@ namespace ThreadsHeadlines
             foreach (HtmlNode curr in elements)
             {
                 string title = curr.InnerText;
-                string link = curr.GetAttributeValue("href", "none") != "none" ? 
+                string link = curr.GetAttributeValue("href", "none") != "none" ?
                               curr.GetAttributeValue("href", "none") : curr.ChildNodes["a"].GetAttributeValue("href", "none");
                 string fullLink = link.StartsWith("/") ? baseUrl + link : link;
                 result[title] = fullLink;
