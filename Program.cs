@@ -16,7 +16,7 @@ namespace ThreadsHeadlines
 
             // Get the continents pages' urls
             var articles = WebPage.GetArticlesFromPage("https://www.bbc.com/news/world", "li", "nw-c-nav__secondary-menuitem-container");
-            string[] keysArray = articles.Keys.ToArray<string>();
+            string[] articlesKeysArray = articles.Keys.ToArray<string>();
 
             var doneEvents = new ManualResetEvent[articles.Count];
             var pagesArray = new WebPage[articles.Count];
@@ -25,9 +25,9 @@ namespace ThreadsHeadlines
             ThreadPool.SetMaxThreads(10, 10);
 
             // Build requests queue and execute the calls
-            for (int i = 0; i < keysArray.Length; i++)
+            for (int i = 0; i < articlesKeysArray.Length; i++)
             {
-                var curr = keysArray[i];
+                var curr = articlesKeysArray[i];
                 doneEvents[i] = new ManualResetEvent(false);
                 var page = new WebPage(curr, articles[curr], "a", "gs-c-promo-heading", doneEvents[i]);
                 pagesArray[i] = page;
@@ -50,9 +50,7 @@ namespace ThreadsHeadlines
                 Console.WriteLine(currPage.Category);
 
                 foreach (var currArticle in currPage.Articles)
-                {
                     Console.WriteLine("{0}: {1}", currArticle.Key, currArticle.Value);
-                }
             }
         }
     }
@@ -111,9 +109,7 @@ namespace ThreadsHeadlines
 
                 // Check if the link is found - if not get child element for it
                 if (link == "none")
-                {
                     link = curr.ChildNodes["a"].GetAttributeValue("href", "none"); 
-                }
 
                 // Check if the link is relative
                 string fullLink = link.StartsWith("/") ? baseUrl + link : link;
